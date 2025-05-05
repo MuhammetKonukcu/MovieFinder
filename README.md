@@ -1,14 +1,45 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
+# MovieFinder
 
-* `/composeApp` is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - `commonMain` is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    `iosMain` would be the right folder for such calls.
+A **Compose Multiplatform** application that fetches and displays movies and TV shows from TMDB API, using modern Android and iOS architectures.
 
-* `/iosApp` contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform, 
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+![firtst_image](https://github.com/user-attachments/assets/dba0afff-672a-44d1-b728-a221608a74bc)
+![second_image](https://github.com/user-attachments/assets/2427e47f-54ed-4b49-b43c-83906b3058c1)
 
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+## 📦 Libraries & Technologies
+
+* **Ktor**: HTTP client for making network requests to TMDB API.
+* **TMDB API**: Provides movie and TV data (listings, details, videos, images, credits).
+* **Paging 3**: Handles pagination of large data sets, ensuring smooth scrolling and efficient memory usage.
+* **Room**: Local database to store favorite movies and TV shows using SQLite with strong type safety.
+* **Coroutines**: Asynchronous programming for non-blocking I/O and concurrency.
+* **Koin**: Dependency Injection framework for easy and modular DI setup.
+* **Coil**: Image loading library for Compose to fetch and display posters, backdrops, and thumbnails.
+* **Jetpack Compose Multiplatform**: UI toolkit for building declarative UIs on Android and iOS.
+* **MVVM & Clean Architecture**: Separates concerns into presentation, domain, and data layers for maintainability and testability.
+
+## 🚀 Features
+
+* Browse popular, top-rated, now-playing, upcoming, trending (daily & weekly), and free-to-watch movies/TV shows.
+* Search and discover with filters (genre, year, content type, sort order).
+* Paging support for infinite scrolling.
+* Detail screens with images, videos, and cast lists.
+* Favorites stored locally via Room.
+* Language & region localization support.
+
+## ⚙️ Setup
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/MuhammetKonukcu/MovieFinder.git
+   ```
+2. Add your TMDB API token to `local.properties` in the project root:
+
+   ```properties
+   tmdb_auth_token=YOUR_TMDB_API_TOKEN_HERE
+   ```
+3. Open the project in IntelliJ/Android Studio or Xcode (via Gradle sync).
+4. Build and run on Android or iOS target.
+
+---
