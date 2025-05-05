@@ -35,129 +35,101 @@ class TmdbClient(
     private val baseUrl = "api.themoviedb.org"
 
     suspend fun getPopularMovies(
-        page: Int = 1,
-        language: String = defaultLanguage
+        page: Int = 1
     ): MovieResponse = sendRequest(
         path = "movie/popular",
-        page = page,
-        language = language
+        page = page
     ).body()
 
     suspend fun getTopRatedMovies(
-        page: Int = 1,
-        language: String = defaultLanguage
+        page: Int = 1
     ): MovieResponse = sendRequest(
         path = "movie/top_rated",
-        page = page,
-        language = language
+        page = page
     ).body()
 
     suspend fun getNowPlayingMovies(
-        page: Int = 1,
-        language: String = defaultLanguage
+        page: Int = 1
     ): MovieResponse = sendRequest(
         path = "movie/now_playing",
-        page = page,
-        language = language
+        page = page
     ).body()
 
     suspend fun getUpcomingMovies(
-        page: Int = 1,
-        language: String = defaultLanguage
+        page: Int = 1
     ): MovieResponse = sendRequest(
         path = "movie/upcoming",
-        page = page,
-        language = language
+        page = page
     ).body()
 
     suspend fun getDayTrendingMovies(
-        page: Int = 1,
-        language: String = defaultLanguage
+        page: Int = 1
     ): MovieResponse = sendRequest(
         path = "trending/movie/day",
-        page = page,
-        language = language
+        page = page
     ).body()
 
     suspend fun getWeekTrendingMovies(
-        page: Int = 1,
-        language: String = defaultLanguage
+        page: Int = 1
     ): MovieResponse = sendRequest(
         path = "trending/movie/week",
-        page = page,
-        language = language
+        page = page
     ).body()
 
     suspend fun getFreeToWatchMovies(
-        page: Int = 1,
-        region: String = defaultRegion,
-        language: String = defaultLanguage
+        page: Int = 1
     ): MovieResponse = sendRequest(
         path = "discover/movie",
         page = page,
-        language = language,
         extraParams = mapOf(
             "with_watch_monetization_types" to "free",
-            "watch_region" to region
+            "watch_region" to defaultRegion
         )
     ).body()
 
     suspend fun getPopularSeries(
-        page: Int = 1,
-        language: String = defaultLanguage
+        page: Int = 1
     ): SeriesResponse = sendRequest(
         path = "tv/popular",
-        page = page,
-        language = language
+        page = page
     ).body()
 
     suspend fun getTopRatedSeries(
-        page: Int = 1,
-        language: String = defaultLanguage
+        page: Int = 1
     ): SeriesResponse = sendRequest(
         path = "tv/top_rated",
-        page = page,
-        language = language
+        page = page
     ).body()
 
     suspend fun getNowPlayingSeries(
-        page: Int = 1,
-        language: String = defaultLanguage
+        page: Int = 1
     ): SeriesResponse = sendRequest(
         path = "tv/on_the_air",
-        page = page,
-        language = language
+        page = page
     ).body()
 
     suspend fun getDayTrendingSeries(
-        page: Int = 1,
-        language: String = defaultLanguage
+        page: Int = 1
     ): SeriesResponse = sendRequest(
         path = "tv/airing_today",
-        page = page,
-        language = language
+        page = page
     ).body()
 
     suspend fun getWeekTrendingSeries(
-        page: Int = 1,
-        language: String = defaultLanguage
+        page: Int = 1
     ): SeriesResponse = sendRequest(
         path = "trending/tv/week",
-        page = page,
-        language = language
+        page = page
     ).body()
 
     suspend fun getFreeToWatchSeries(
-        page: Int = 1,
-        region: String = defaultRegion,
-        language: String = defaultLanguage
+        page: Int = 1
     ): SeriesResponse = sendRequest(
         path = "discover/tv",
         page = page,
-        language = language,
         extraParams = mapOf(
             "with_watch_monetization_types" to "free",
-            "watch_region" to region
+            "watch_region" to defaultRegion
         )
     ).body()
 
@@ -166,13 +138,11 @@ class TmdbClient(
         genres: List<Int>,
         year: Int?,
         page: Int = 1,
-        sortBy: String? = null,
-        language: String = defaultLanguage
+        sortBy: String? = null
     ): MovieResponse = sendRequest(
         path = "search/movie",
         page = page,
         sortBy = sortBy,
-        language = language,
         extraParams = buildMap {
             put("query", query)
             if (genres.isNotEmpty()) put("with_genres", genres.joinToString(","))
@@ -185,12 +155,10 @@ class TmdbClient(
         genres: List<Int>,
         year: Int?,
         page: Int = 1,
-        sortBy: String? = null,
-        language: String = defaultLanguage
+        sortBy: String? = null
     ): MovieResponse = sendRequest(
         path = "search/tv",
         page = page,
-        language = language,
         sortBy = sortBy,
         extraParams = buildMap {
             put("query", query)
@@ -203,7 +171,6 @@ class TmdbClient(
         contentType: ContentType,
         genres: List<Int>,
         year: Int?,
-        language: String = defaultLanguage,
         sortBy: String? = null,
         page: Int = 1
     ): MovieResponse = sendRequest(
@@ -212,7 +179,6 @@ class TmdbClient(
             ContentType.Series -> "discover/tv"
         },
         page = page,
-        language = language,
         sortBy = sortBy,
         extraParams = buildMap {
             if (genres.isNotEmpty()) put("with_genres", genres.joinToString(","))
@@ -227,11 +193,11 @@ class TmdbClient(
 
     suspend fun getDetails(
         id: Int
-    ): MovieDetail = sendRequest(path = "movie/$id", language = defaultLanguage).body()
+    ): MovieDetail = sendRequest(path = "movie/$id").body()
 
     suspend fun getSeriesDetails(
         id: Int
-    ): SeriesDetail = sendRequest(path = "tv/$id", language = defaultLanguage).body()
+    ): SeriesDetail = sendRequest(path = "tv/$id").body()
 
     suspend fun getVideos(
         contentType: ContentType,
@@ -241,7 +207,7 @@ class TmdbClient(
         val languages: List<String> = listOf(defaultLanguage, "en-US").distinct()
         languages.map { lang ->
             async {
-                sendRequest(path = "$path/$id/videos", language = lang)
+                sendRequest(path = "$path/$id/videos")
                     .body<VideosResponse>()
                     .results
             }
@@ -256,7 +222,7 @@ class TmdbClient(
         id: Int
     ): ImagesResponse {
         val path = if (contentType == ContentType.Movie) "movie" else "tv"
-        return sendRequest(path = "$path/$id/images", language = "").body()
+        return sendRequest(path = "$path/$id/images").body()
     }
 
     suspend fun getActors(
@@ -264,22 +230,21 @@ class TmdbClient(
         id: Int
     ): ActorsResponse {
         val path = if (contentType == ContentType.Movie) "movie" else "tv"
-        return sendRequest(path = "$path/$id/credits", language = defaultLanguage).body()
+        return sendRequest(path = "$path/$id/credits").body()
     }
 
     suspend fun getPerson(id: Int): Person =
-        sendRequest("person/$id", language = defaultLanguage).body()
+        sendRequest("person/$id").body()
 
     suspend fun getPersonCredits(id: Int): CombinedCreditResponse =
-        sendRequest(path = "person/$id/combined_credits", language = defaultLanguage).body()
+        sendRequest(path = "person/$id/combined_credits").body()
 
     suspend fun getPersonImages(id: Int): PersonImagesResponse =
-        sendRequest(path = "person/$id/images", language = defaultLanguage).body()
+        sendRequest(path = "person/$id/images").body()
 
     private suspend fun sendRequest(
         path: String,
         page: Int? = null,
-        language: String,
         sortBy: String? = null,
         extraParams: Map<String, String> = emptyMap()
     ): HttpResponse {
@@ -289,7 +254,7 @@ class TmdbClient(
                 host = baseUrl
                 encodedPath = "/3/$path"
                 parameter("api_key", apiKey)
-                parameter("language", language)
+                parameter("language", defaultLanguage)
                 sortBy?.let { parameter("sort_by", it) }
                 page?.let { parameter("page", it.toString()) }
                 extraParams.forEach { (k, v) -> parameter(k, v) }
