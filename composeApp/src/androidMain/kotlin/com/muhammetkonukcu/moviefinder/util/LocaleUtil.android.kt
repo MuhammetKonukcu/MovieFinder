@@ -7,3 +7,5 @@ actual fun currentLanguageTag(): String = Locale.getDefault().toLanguageTag()
 actual fun defaultRegion(): String {
     return Locale.getDefault().country.uppercase().ifEmpty { "US" }
 }
+
+actual fun currentTimeMillis(): Long = System.currentTimeMillis()
