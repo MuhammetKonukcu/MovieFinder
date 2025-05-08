@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -47,8 +48,10 @@ import app.cash.paging.compose.LazyPagingItems
 import app.cash.paging.compose.collectAsLazyPagingItems
 import com.muhammetkonukcu.moviefinder.model.Filters
 import com.muhammetkonukcu.moviefinder.remote.entity.Movie
+import com.muhammetkonukcu.moviefinder.room.entity.HistoryEntity
 import com.muhammetkonukcu.moviefinder.screen.sheet.SearchFilterSheet
 import com.muhammetkonukcu.moviefinder.theme.AppPrimaryColor
+import com.muhammetkonukcu.moviefinder.theme.Neutral550
 import com.muhammetkonukcu.moviefinder.util.DonutProgress
 import com.muhammetkonukcu.moviefinder.util.ErrorItem
 import com.muhammetkonukcu.moviefinder.util.LoadAsyncImage
@@ -57,6 +60,8 @@ import com.muhammetkonukcu.moviefinder.util.getGenreMap
 import com.muhammetkonukcu.moviefinder.util.toGenreNames
 import com.muhammetkonukcu.moviefinder.viewmodel.SearchViewModel
 import moviefinder.composeapp.generated.resources.Res
+import moviefinder.composeapp.generated.resources.delete
+import moviefinder.composeapp.generated.resources.ph_cancel
 import moviefinder.composeapp.generated.resources.ph_sliders
 import moviefinder.composeapp.generated.resources.search_hint
 import org.jetbrains.compose.resources.painterResource
@@ -69,7 +74,8 @@ import kotlin.math.roundToInt
 @Composable
 fun SearchScreen(navController: NavController, innerPadding: PaddingValues) {
     val viewModel = koinViewModel<SearchViewModel>()
-    val lazyPagingItems = viewModel.pagingData.collectAsLazyPagingItems()
+    val searchPagingItems = viewModel.searchFlow.collectAsLazyPagingItems()
+    val historyPagingItems = viewModel.historyFlow.collectAsLazyPagingItems()
     val hasFilterChanges by viewModel.hasFilterChanges.collectAsState()
     var query by rememberSaveable { mutableStateOf("") }
     Scaffold(
@@ -91,11 +97,20 @@ fun SearchScreen(navController: NavController, innerPadding: PaddingValues) {
                 }
             )
 
-            SearchLazyColumn(
-                lazyPagingItems = lazyPagingItems,
-                hasFilterChanges = hasFilterChanges,
-                navController = navController
-            )
+            if (!hasFilterChanges) {
+                HistoryLazyColumn(
+                    viewModel = viewModel,
+                    lazyPagingItems = historyPagingItems,
+                    navController = navController
+                )
+            } else {
+                SearchLazyColumn(
+                    viewModel = viewModel,
+                    lazyPagingItems = searchPagingItems,
+                    hasFilterChanges = hasFilterChanges,
+                    navController = navController
+                )
+            }
         }
     }
 }
@@ -232,6 +247,7 @@ private fun SearchBar(
 
 @Composable
 private fun SearchLazyColumn(
+    viewModel: SearchViewModel,
     lazyPagingItems: LazyPagingItems<Movie>,
     hasFilterChanges: Boolean,
     navController: NavController
@@ -259,9 +275,13 @@ private fun SearchLazyColumn(
             val media = lazyPagingItems[index]
             media?.let {
                 if (!media.title.isNullOrBlank())
-                    MovieItem(movie = media, navController = navController)
+                    MovieItem(movie = media, navController = navController, onClickedItem = {
+                        viewModel.addHistory(movie = it)
+                    })
                 else
-                    SeriesItem(series = media, navController = navController)
+                    SeriesItem(series = media, navController = navController, onClickedItem = {
+                        viewModel.addHistory(movie = it)
+                    })
             }
         }
 
@@ -280,8 +300,48 @@ private fun SearchLazyColumn(
 }
 
 @Composable
-private fun MovieItem(movie: Movie, navController: NavController) {
+private fun HistoryLazyColumn(
+    viewModel: SearchViewModel,
+    lazyPagingItems: LazyPagingItems<HistoryEntity>,
+    navController: NavController
+) {
+    LazyColumn(
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        items(
+            count = lazyPagingItems.itemCount,
+            key = { index ->
+                val item = lazyPagingItems[index]
+                "${item?.id}${item?.mediaType}"
+            }
+        ) { index ->
+            val media = lazyPagingItems[index]
+            media?.let {
+                MovieItem(movie = media, navController = navController, onClickedItem = {
+                    viewModel.removeFromHistory(id = media.id, mediaType = media.mediaType)
+                })
+            }
+        }
+
+        when (lazyPagingItems.loadState.append) {
+            is LoadState.Loading -> {
+                item { LoadingItem() }
+            }
+
+            is LoadState.Error -> {
+                item { ErrorItem(onRetryClick = { lazyPagingItems.retry() }) }
+            }
+
+            else -> {}
+        }
+    }
+}
+
+@Composable
+private fun MovieItem(movie: Movie, navController: NavController, onClickedItem: () -> Unit) {
     Row(modifier = Modifier.fillMaxWidth().clickable {
+        onClickedItem.invoke()
         navController.navigate("MovieDetail/${movie.id}") {
             launchSingleTop = true
         }
@@ -352,8 +412,9 @@ private fun MovieItem(movie: Movie, navController: NavController) {
 }
 
 @Composable
-private fun SeriesItem(series: Movie, navController: NavController) {
+private fun SeriesItem(series: Movie, navController: NavController, onClickedItem: () -> Unit) {
     Row(modifier = Modifier.fillMaxWidth().clickable {
+        onClickedItem.invoke()
         navController.navigate("SeriesDetail/${series.id}") {
             launchSingleTop = true
         }
@@ -420,6 +481,111 @@ private fun SeriesItem(series: Movie, navController: NavController) {
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
+private fun MovieItem(
+    movie: HistoryEntity,
+    navController: NavController,
+    onClickedItem: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                if (movie.mediaType == "movie") {
+                    navController.navigate("MovieDetail/${movie.id}") {
+                        launchSingleTop = true
+                    }
+                } else {
+                    navController.navigate("SeriesDetail/${movie.id}") {
+                        launchSingleTop = true
+                    }
+                }
+
+            },
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Box {
+            LoadAsyncImage(
+                imagePath = movie.posterPath,
+                contentDescription = movie.title ?: "",
+                width = 100,
+                height = 150,
+                cornerRadius = RoundedCornerShape(8.dp)
+            )
+            val percent: Int = (movie.voteAverage * 10).roundToInt()
+            DonutProgress(
+                modifier = Modifier.align(Alignment.TopStart)
+                    .offset(x = 3.dp, y = 3.dp),
+                progress = percent,
+                size = 30.dp,
+                textSize = 12.sp,
+                strokeWidth = 2.dp
+            )
+        }
+
+        Column(
+            modifier = Modifier.fillMaxWidth().height(150.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    modifier = Modifier
+                        .weight(1f),
+                    text = movie.title ?: "",
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                IconButton(modifier = Modifier.size(32.dp), onClick = { onClickedItem.invoke() }) {
+                    Icon(
+                        modifier = Modifier.size(24.dp),
+                        painter = painterResource(Res.drawable.ph_cancel),
+                        contentDescription = stringResource(Res.string.delete),
+                        tint = Neutral550
+                    )
+                }
+            }
+
+            val genres = if (movie.genreIds.isNotEmpty()) movie.genreIds.toGenreNames(getGenreMap())
+                .joinToString(separator = " - ") else ""
+            val year = movie.releaseDate?.take(4) ?: ""
+
+            if (year.length + genres.length > 0) {
+                val separator = " - "
+
+                val infoStr = when {
+                    year.isNotEmpty() && genres.isNotEmpty() -> year + separator + genres
+                    year.isNotEmpty() -> year
+                    genres.isNotEmpty() -> genres
+                    else -> ""
+                }
+
+                Text(
+                    text = infoStr,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Text(
+                text = movie.overview ?: "",
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 14.sp),
+                color = MaterialTheme.colorScheme.primary,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f).fillMaxWidth()
             )
         }
     }

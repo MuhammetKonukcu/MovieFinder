@@ -5,6 +5,7 @@
     <string name="search">Search</string>
     <string name="bookmark">Bookmark</string>
     <string name="back">Back</string>
+    <string name="delete">Delete</string>
     <string name="check_internet_connection">Please check your internet connection!</string>
     <string name="search_hint">Search...</string>
     <string name="all_times">All Times</string>

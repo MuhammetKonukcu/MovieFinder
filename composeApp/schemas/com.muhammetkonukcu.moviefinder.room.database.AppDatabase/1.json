@@ -2,10 +2,78 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "1e58a5a64e4bb3e436aab64d58c2d22b",
+    "identityHash": "bfe11f08068209ed94b7d73bdcbc5a25",
     "entities": [
       {
         "tableName": "movies",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `mediaType` TEXT NOT NULL, `voteAverage` REAL NOT NULL, `title` TEXT, `adult` INTEGER NOT NULL, `overview` TEXT, `posterPath` TEXT, `releaseDate` TEXT, `genreIds` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mediaType",
+            "columnName": "mediaType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "voteAverage",
+            "columnName": "voteAverage",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "adult",
+            "columnName": "adult",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "overview",
+            "columnName": "overview",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "posterPath",
+            "columnName": "posterPath",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "releaseDate",
+            "columnName": "releaseDate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "genreIds",
+            "columnName": "genreIds",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "history",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `mediaType` TEXT NOT NULL, `voteAverage` REAL NOT NULL, `title` TEXT, `adult` INTEGER NOT NULL, `overview` TEXT, `posterPath` TEXT, `releaseDate` TEXT, `genreIds` TEXT NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
@@ -75,7 +143,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1e58a5a64e4bb3e436aab64d58c2d22b')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'bfe11f08068209ed94b7d73bdcbc5a25')"
     ]
   }
 }

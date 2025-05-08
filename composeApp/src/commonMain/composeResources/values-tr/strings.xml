@@ -5,6 +5,7 @@
     <string name="search">Ara</string>
     <string name="bookmark">Favoriler</string>
     <string name="back">Geri</string>
+    <string name="delete">Sil</string>
     <string name="refresh">Yenile</string>
     <string name="check_internet_connection">Lütfen internet bağlantınızı kontrol edin!</string>
     <string name="search_hint">Ara...</string>

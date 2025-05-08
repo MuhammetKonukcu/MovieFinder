@@ -5,9 +5,12 @@ import androidx.lifecycle.viewModelScope
 import app.cash.paging.PagingData
 import app.cash.paging.cachedIn
 import com.muhammetkonukcu.moviefinder.model.Filters
-import com.muhammetkonukcu.moviefinder.util.ContentType
 import com.muhammetkonukcu.moviefinder.remote.entity.Movie
 import com.muhammetkonukcu.moviefinder.repository.MovieRepository
+import com.muhammetkonukcu.moviefinder.room.entity.HistoryEntity
+import com.muhammetkonukcu.moviefinder.room.repository.SearchHistoryRepository
+import com.muhammetkonukcu.moviefinder.util.ContentType
+import com.muhammetkonukcu.moviefinder.util.currentTimeMillis
 import com.muhammetkonukcu.moviefinder.util.genreIds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -21,10 +24,43 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import kotlin.collections.map
 
 class SearchViewModel(
-    private val repo: MovieRepository
+    private val repo: MovieRepository,
+    private val historyRepo: SearchHistoryRepository
 ) : ViewModel() {
+    val historyFlow = historyRepo
+        .getHistory()
+        .cachedIn(viewModelScope)
+
+    fun addHistory(movie: Movie) {
+        viewModelScope.launch {
+            val now: Long = currentTimeMillis()
+            historyRepo.insertMovie(
+                entity = HistoryEntity(
+                    id = movie.id,
+                    createdAt = now,
+                    mediaType = if (!movie.title.isNullOrBlank()) "movie" else "tv",
+                    voteAverage = movie.voteAverage,
+                    title = if (!movie.title.isNullOrBlank()) movie.title else movie.name,
+                    adult = movie.adult,
+                    overview = movie.overview,
+                    posterPath = movie.posterPath,
+                    releaseDate = if (!movie.title.isNullOrBlank()) movie.releaseDate else movie.firstAirDate,
+                    genreIds = movie.genreIds
+                )
+            )
+        }
+    }
+
+    fun removeFromHistory(id: Int, mediaType: String) {
+        viewModelScope.launch {
+            historyRepo.removeFromHistory(id = id, mediaType = mediaType)
+        }
+    }
+
     private val defaultGenreStates = genreIds.associateWith { false }
     val defaultFilters = Filters(
         contentTypes = mapOf("Movie" to true, "Series" to false),
@@ -49,7 +85,7 @@ class SearchViewModel(
         )
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val pagingData: Flow<PagingData<Movie>> = combine(
+    val searchFlow: Flow<PagingData<Movie>> = combine(
         _filters,
         hasFilterChanges
     ) { filters, hasChanges ->
@@ -76,5 +112,10 @@ class SearchViewModel(
 
     fun updateFilters(new: Filters) {
         _filters.value = new
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        println("Cleared")
     }
 }
